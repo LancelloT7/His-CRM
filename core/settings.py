@@ -48,10 +48,10 @@ INSTALLED_APPS = [
     'autenticacao',
     'sku',
     'funcionario',
+    'pecas',
     'produto',
     'entrada',
     'triagem',
-    'pecas',
     'pedido',
     
 ]

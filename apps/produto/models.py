@@ -1,8 +1,7 @@
 from django.db import models
 from funcionario.models import Funcionario
-from sku.models import Sku,Sufixo
-from pecas.models import Peca
-# Create your models here.
+from sku.models import Sku, Sufixo
+from pecas.models import Peca  # Aqui mantemos apenas Peca, sem ProdutoPeca ainda
 
 class Produto(models.Model):
     STATUS_CHOICES = [
@@ -27,7 +26,6 @@ class Produto(models.Model):
         ('Tela Quebrada', 'Tela Quebrada'),
         ('Não liga', 'Não liga'),
         ('Sem Defeito', 'Sem Defeito'),
-        
     ]
 
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='ENTRADA')
@@ -38,7 +36,7 @@ class Produto(models.Model):
     sku = models.ForeignKey(Sku, on_delete=models.DO_NOTHING, related_name="produto_sku")
     sufixo = models.ForeignKey(Sufixo, on_delete=models.DO_NOTHING, related_name="produto_sufixo")
     modelo = models.ForeignKey(Sku, on_delete=models.DO_NOTHING, related_name="produto_modelo_sku")
-    peca = models.ManyToManyField(Peca, related_name="produto_pecas")
+    peca = models.ManyToManyField('pecas.Peca', through="pecas.ProdutoPeca", related_name="produtos")
     defeito = models.CharField(max_length=30, choices=DEFEITO_CHOICES, null=False, blank=False)
     defeito_especifico = models.CharField(max_length=30, choices=DEFEITO_ESPECIFICO, default="Sem Defeito")
     responsavel_conserto = models.ForeignKey(
@@ -56,16 +54,13 @@ class Produto(models.Model):
     responsavel_triagem = models.ForeignKey(
         Funcionario, on_delete=models.SET_NULL, null=True, related_name="responsavel_triagem"
     )
+
     @property
     def tipo_defeito(self):
-        # Retorna a descrição do defeito correspondente ao código
         for chave, valor in self.DEFEITO_CHOICES:
             if chave == self.defeito:
                 return valor
         return 'Desconhecido'
-    
-   
+
     def __str__(self):
         return f"{self.status} | {self.data_entrada} | {self.ptn} | {self.serie} | {self.sku} | {self.sufixo} | {self.modelo} | {self.responsavel_conserto} | {self.responsavel_embalagem} | {self.responsavel_entrada} | {self.responsavel_triagem} | {self.responsavel_saida} | {self.defeito}"
-
-

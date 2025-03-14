@@ -51,7 +51,7 @@
                     </ul>
                 </div>
                 <p class="description description-second">ou use seu email para se registrar:</p>
-                <form class="form" method="POST" action="#">{% csrf_token %}
+                <form class="form" method="POST" action="{% url 'cadastro' %}">{% csrf_token %}
                     
 
                     <label class="label-input" for="">

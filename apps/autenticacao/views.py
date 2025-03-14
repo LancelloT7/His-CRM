@@ -27,27 +27,27 @@ def logar(request):
     return render(request, 'login_cadastro.html')
 
 
-#def cadastro(request):
-   # if request.method =="GET":
-   #     return render(request, 'login_cadastro.html')
-  #  elif request.method =="POST":
+def cadastro(request):
+    if request.method =="GET":
+        return render(request, 'login_cadastro.html')
+    elif request.method =="POST":
         
-    #    nome = request.POST.get('nome')
-     #   senha = request.POST.get('senha')
-     #   confirmar_senha = request.POST.get('confirmar_senha')
+       nome = request.POST.get('nome')
+       senha = request.POST.get('senha')
+       confirmar_senha = request.POST.get('confirmar_senha')
 
-      #  if Usuario.objects.filter(username=nome).exists():
-         #   messages.add_message(request, constants.ERROR, 'Usuário já existe')
-          #  return render(request, 'login_cadastro.html')
-       # elif senha != confirmar_senha:
-           # messages.add_message(request, constants.ERROR, 'As senhas não são iguais')
-          #  return render(request, 'login_cadastro.html')
+    if Usuario.objects.filter(username=nome).exists():
+        messages.add_message(request, constants.ERROR, 'Usuário já existe')
+        return render(request, 'login_cadastro.html')
+    elif senha != confirmar_senha:
+        messages.add_message(request, constants.ERROR, 'As senhas não são iguais')
+        return render(request, 'login_cadastro.html')
 
-        #usuario = Usuario(username=nome)
-        #usuario.set_password(senha)
-        #usuario.save()
-       # messages.add_message(request, constants.SUCCESS, 'Usuário Cadastrado')
-       # return render(request, 'login_cadastro.html')
+    usuario = Usuario(username=nome)
+    usuario.set_password(senha)
+    usuario.save()
+    messages.add_message(request, constants.SUCCESS, 'Usuário Cadastrado')
+    return render(request, 'login_cadastro.html')
     
 def sair(request):
     

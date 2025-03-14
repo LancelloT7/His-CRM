@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from pecas.models import Peca
+from pecas.models import Peca, ProdutoPeca
 from sku.models import Sku, Sufixo
 from django.contrib import messages
 from django.contrib.messages import constants
 from django.http import JsonResponse, HttpResponse
 from produto.models import Produto
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 
 # Create your views here.
 @login_required(login_url='logar')
@@ -94,33 +95,39 @@ def adicionar_pecas(request, produto_id):
     produto = get_object_or_404(Produto, id=produto_id)
 
     if request.method == "POST":
-        # Atualiza o status do produto
-        produto.status = "VERIFICAR DISPONIBILIDADE"
-        produto.save()
+        with transaction.atomic():  
+            
+            produto.status = "VERIFICAR DISPONIBILIDADE"
+            produto.save()
 
-        # Obtém as peças selecionadas no formulário
-        pecas_selecionadas = request.POST.getlist("pecas")
-        pecas = Peca.objects.filter(id__in=pecas_selecionadas)
+            
+            pecas_selecionadas = request.POST.getlist("pecas")
 
-        # Remove as peças que não estão mais selecionadas
-        produto.peca.remove(*produto.peca.exclude(id__in=pecas_selecionadas))
-        
-        # Adiciona as novas peças ao produto
-        produto.peca.add(*pecas)
-        
-        # Atualiza o tipo e o defeito de cada peça
-        for peca in pecas:
-            tipo = request.POST.get(f"tipo_peca_{peca.id}")
-            defeito = request.POST.get(f"defeito_pecas_{peca.id}")
-            if tipo and defeito:
-                peca.tipo_peca = tipo
-                peca.defeito_pecas = defeito
-                peca.save()  # Salva a peça com as novas informações
-        # Atualiza o status do produto se não houver peças associadas
-        if not produto.peca.exists():
-            produto.status = "LIBERADO PARA CONSERTO"
-        produto.save()
+            ProdutoPeca.objects.filter(produto=produto).exclude(peca_id__in=pecas_selecionadas).delete()
+            
+            pecas = {p.id: p for p in Peca.objects.filter(id__in=pecas_selecionadas)}
+            
+            for peca_id in pecas_selecionadas:
+                peca = pecas.get(int(peca_id))
 
-        return redirect("buscar_produto")  # Redireciona para a busca após salvar
+                if peca:
+                    tipo = request.POST.get(f"tipo_peca_{peca.id}", "")
+                    defeito = request.POST.get(f"defeito_pecas_{peca.id}", "")
+
+                    ProdutoPeca.objects.update_or_create(
+                        produto=produto,
+                        peca=peca,
+                        defaults={"tipo_peca": tipo, "defeito_pecas": defeito}
+                    )
+
+            
+            if not ProdutoPeca.objects.filter(produto=produto).exists():
+                produto.status = "LIBERADO PARA CONSERTO"
+                produto.save()
+
+        return redirect("buscar_produto") 
     
     return redirect("buscar_produto")
+
+
+   )
